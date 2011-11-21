@@ -383,13 +383,13 @@ class GUIToolkit ( Toolkit ):
     #--------------------------------------------------------------------------
 
     def color_trait ( self, *args, **traits ):
-        raise NotImplementedError
+        return None
 
     def rgb_color_trait ( self, *args, **traits ):
-        raise NotImplementedError
+        return None
 
     def font_trait ( self, *args, **traits ):
-        raise NotImplementedError
+        return None
 
     #--------------------------------------------------------------------------
     #  'Editor' class methods:
