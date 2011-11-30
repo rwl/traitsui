@@ -20,10 +20,13 @@
    dialogs.
 """
 
-from muntjac.api import Window, VerticalLayout, Button
+from muntjac.api \
+    import Window, VerticalLayout, Button, HorizontalLayout, Label
 
 from muntjac.ui.window import CloseEvent
 from muntjac.ui.button import ClickEvent
+
+from muntjac.event.shortcut_action import KeyCode
 
 from traits.api \
     import HasStrictTraits, HasPrivateTraits, Instance, List, Event
@@ -288,50 +291,48 @@ class _StickyDialog(Window):
         self._ui = ui
         self._result = None
 
-    def closeEvent(self, e):
+    def close(self):
         """Reimplemented to check when the clicks the window close button.
-        (Note that QDialog doesn't get a close event when the dialog is closed
-        in any other way.)"""
-
+        """
         if self._ok_to_close():
-            QtGui.QDialog.closeEvent(self, e)
+            super(_StickyDialog, self).close()
         else:
             # Ignore the event thereby keeping the dialog open.
-            e.ignore()
+            pass
 
-    def keyPressEvent(self, e):
+    def fireEvent(self, e):
         """Reimplemented to ignore the Escape key if appropriate, and to ignore
         the Enter key if no default button has been explicitly set."""
 
-        if e.key() in (QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return) and \
-               not self._ui.view.default_button:
+        if (e.key() == KeyCode.ENTER and
+               not self._ui.view.default_button):
             return
 
-        if e.key() == QtCore.Qt.Key_Escape and not self._ok_to_close():
+        if e.key() == KeyCode.ESCAPE and not self._ok_to_close():
             return
 
-        QtGui.QDialog.keyPressEvent(self, e)
+        super(_StickyDialog, self).fireEvent(e)
 
-    def sizeHint(self):
-        """Reimplemented to provide an appropriate size hint for the window.
-        """
-        size = QtGui.QDialog.sizeHint(self)
-        view = self._ui.view
-        if view.width > 0:
-            size.setWidth(view.width)
-        if view.height > 0:
-            size.setHeight(view.height)
-        return size
-
-    def done(self, r):
-        """Reimplemented to ignore calls to accept() or reject() if
-        appropriate."""
-
-        # If we already have a result then we already know that we are done.
-        if self._result is not None:
-            QtGui.QDialog.done(self, self._result)
-        elif self._ok_to_close(bool(r)):
-            QtGui.QDialog.done(self, r)
+#    def sizeHint(self):
+#        """Reimplemented to provide an appropriate size hint for the window.
+#        """
+#        size = QtGui.QDialog.sizeHint(self)
+#        view = self._ui.view
+#        if view.width > 0:
+#            size.setWidth(view.width)
+#        if view.height > 0:
+#            size.setHeight(view.height)
+#        return size
+#
+#    def done(self, r):
+#        """Reimplemented to ignore calls to accept() or reject() if
+#        appropriate."""
+#
+#        # If we already have a result then we already know that we are done.
+#        if self._result is not None:
+#            QtGui.QDialog.done(self, self._result)
+#        elif self._ok_to_close(bool(r)):
+#            QtGui.QDialog.done(self, r)
 
     def _ok_to_close(self, is_ok=None):
         """Let the handler decide if the dialog should be closed."""
@@ -383,18 +384,18 @@ class BaseDialog(BasePanel):
         to the dialog."""
 
         # If the panel is a layout then provide a widget for it.
-        if isinstance(panel, QtGui.QLayout):
-            w = QtGui.QWidget()
-            panel.setContentsMargins(0, 0, 0, 0)
-            w.setLayout(panel)
-            panel = w
+#        if isinstance(panel, QtGui.QLayout):
+#            w = QtGui.QWidget()
+#            panel.setContentsMargins(0, 0, 0, 0)
+#            w.setLayout(panel)
+#            panel = w
 
         if panel is not None:
-            self.control._mw.setCentralWidget(panel)
+            self.control._mw.addComponent(panel)
 
         # Add the optional buttons.
         if buttons is not None:
-            self.control.layout().addWidget(buttons)
+            self.control.getParent().addComponent(buttons)
 
         # Add the menu bar, tool bar and status bar (if any).
         self._add_menubar()
@@ -431,7 +432,7 @@ class BaseDialog(BasePanel):
         if style == BaseDialog.NONMODAL:
             ui.control.show()
         else:
-            ui.control.setWindowModality(QtCore.Qt.WindowModal)
+            ui.control.setModal(True)
             ui.control.exec_()
 
     def set_icon(self, icon=None):
@@ -459,7 +460,7 @@ class BaseDialog(BasePanel):
         menubar = self.ui.view.menubar
         if menubar is not None:
             self._last_group = self._last_parent = None
-            self.control.layout().setMenuBar(
+            self.control.getParent().setMenuBar(
                 menubar.create_menu_bar( self.control, self ) )
             self._last_group = self._last_parent = None
 
@@ -473,9 +474,9 @@ class BaseDialog(BasePanel):
         toolbar = self.ui.view.toolbar
         if toolbar is not None:
             self._last_group = self._last_parent = None
-            qt_toolbar = toolbar.create_tool_bar( self.control, self )
-            qt_toolbar.setMovable( False )
-            self.control._mw.addToolBar( qt_toolbar )
+            mj_toolbar = toolbar.create_tool_bar( self.control, self )
+#            mj_toolbar.setMovable( False )
+            self.control._mw.addToolBar( mj_toolbar )
             self._last_group = self._last_parent = None
 
     #---------------------------------------------------------------------------
@@ -486,14 +487,14 @@ class BaseDialog(BasePanel):
         """ Adds a statusbar to the dialog.
         """
         if self.ui.view.statusbar is not None:
-            control = QtGui.QStatusBar()
+            control = HorizontalLayout()
             control.setSizeGripEnabled(self.ui.view.resizable)
             listeners = []
             for item in self.ui.view.statusbar:
                 # Create the status widget with initial text
                 name = item.name
-                item_control = QtGui.QLabel()
-                item_control.setText(self.ui.get_extended_value(name))
+                item_control = Label()
+                item_control.setValue(self.ui.get_extended_value(name))
 
                 # Add the widget to the control with correct size
                 width = abs(item.width)
@@ -501,8 +502,8 @@ class BaseDialog(BasePanel):
                 if width <= 1.0:
                     stretch = int(100 * width)
                 else:
-                    item_control.setMinimumWidth(width)
-                control.addWidget(item_control, stretch)
+                    item_control.setWidth('%dpx' % width)
+                control.addComponent(item_control)
 
                 # Set up event listener for updating the status text
                 col = name.find('.')
@@ -522,7 +523,7 @@ class BaseDialog(BasePanel):
         """ Helper function for _add_statusbar.
         """
         def set_status_text(text):
-            control.setText(text)
+            control.setValue(text)
 
         return set_status_text
 

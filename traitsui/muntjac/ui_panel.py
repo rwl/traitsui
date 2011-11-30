@@ -26,7 +26,15 @@
 import cgi
 import re
 
-from muntjac.api import SplitPanel, Window
+from muntjac.api \
+    import SplitPanel, Window, HorizontalLayout, VerticalLayout, Label, \
+        GridLayout, Panel, TabSheet
+
+from muntjac.ui.alignment import Alignment
+
+from muntjac.ui.abstract_layout import AbstractLayout
+
+from muntjac.ui.component import IComponent
 
 from traits.api \
     import Any, Instance, Undefined
@@ -236,21 +244,21 @@ def panel(ui):
     if nr_groups == 1:
         panel = _GroupPanel(content[0], ui).control
     elif nr_groups > 1:
-        panel = QtGui.QTabWidget()
+        panel = TabSheet()
         _fill_panel(panel, content, ui)
         panel.ui = ui
 
     # If the UI is scrollable then wrap the panel in a scroll area.
     if ui.scrollable and panel is not None:
         # Make sure the panel is a widget.
-        if isinstance(panel, QtGui.QLayout):
-            w = QtGui.QWidget()
-            w.setLayout(panel)
-            panel = w
+#        if isinstance(panel, AbstractLayout):
+#            w = QtGui.QWidget()
+#            w.setLayout(panel)
+#            panel = w
 
-        sa = QtGui.QScrollArea()
-        sa.setWidget(panel)
-        sa.setWidgetResizable(True)
+        sa = Panel()
+        sa.addComponent(panel)
+#        sa.setWidgetResizable(True)
         panel = sa
 
     return panel
@@ -457,12 +465,12 @@ class _GroupPanel(object):
         self.ui = ui
 
         if group.orientation == 'horizontal':
-            self.direction = QtGui.QBoxLayout.LeftToRight
+            self.horizontal = True
         else:
-            self.direction = QtGui.QBoxLayout.TopToBottom
+            self.horizontal = False
 
         # outer is the top-level widget or layout that will eventually be
-        # returned.  sub is the QTabWidget or QToolBox corresponding to any
+        # returned.  sub is the TabSheet or Accordion corresponding to any
         # 'tabbed' or 'fold' layout.  It is only used to collapse nested
         # widgets.  inner is the object (not necessarily a layout) that new
         # controls should be added to.
@@ -476,25 +484,32 @@ class _GroupPanel(object):
 
         # Create a border if requested.
         if group.show_border:
-            outer = QtGui.QGroupBox(label)
-            inner = QtGui.QBoxLayout(self.direction, outer)
+            outer = Panel(label)
+            if self.horizontal:
+                inner = HorizontalLayout()
+            else:
+                inner = VerticalLayout()
+            inner.addComponent(outer)
 
         elif label != "":
-            outer = inner = QtGui.QBoxLayout(self.direction)
-            inner.addWidget(heading_text(None, text=label).control)
+            if self.horizontal:
+                outer = inner = HorizontalLayout()
+            else:
+                outer = inner = VerticalLayout()
+            inner.addComponent(heading_text(None, text=label).control)
 
         # Add the layout specific content.
         if len(content) == 0:
             pass
 
         elif group.layout == 'flow':
-            raise NotImplementedError, "'the 'flow' layout isn't implemented"
+            raise NotImplementedError, "the 'flow' layout isn't implemented"
 
         elif group.layout == 'split':
             # Create the splitter.
             splitter = _GroupSplitter(group)
             splitter.setOpaqueResize(False) # Mimic wx backend resize behavior
-            if self.direction == QtGui.QBoxLayout.TopToBottom:
+            if self.horizontal == QtGui.QBoxLayout.TopToBottom:
                 splitter.setOrientation(QtCore.Qt.Vertical)
 
             # Make sure the splitter will expand to fill available space
@@ -548,7 +563,7 @@ class _GroupPanel(object):
             if group.visible_when != '' or group.enabled_when != '':
                 # Make sure that outer is a widget or a layout.
                 if outer is None:
-                    outer = inner = QtGui.QBoxLayout(self.direction)
+                    outer = inner = QtGui.QBoxLayout(self.horizontal)
 
                 # Create an editor.
                 self._setup_editor(group, GroupEditor(control=outer))
@@ -619,20 +634,21 @@ class _GroupPanel(object):
         """
         # Use the existing layout if there is one.
         if outer is None:
-            outer = QtGui.QBoxLayout(self.direction)
+            if self.horizontal:
+                outer = HorizontalLayout()
+            else:
+                outer = VerticalLayout()
 
         # Process each group.
         for subgroup in content:
             panel = _GroupPanel(subgroup, self.ui).control
 
-            if isinstance(panel, QtGui.QWidget):
-                outer.addWidget(panel)
-            elif isinstance(panel, QtGui.QLayout):
-                outer.addLayout(panel)
+            if isinstance(panel, IComponent):
+                outer.addComponent(panel)
             else:
                 # The sub-group is empty which seems to be used as a way of
                 # providing some whitespace.
-                outer.addWidget(QtGui.QLabel(' '))
+                outer.addWidget(Label(' '))
 
         return outer
 
@@ -657,7 +673,7 @@ class _GroupPanel(object):
 
         # See if a grid layout is needed.
         if show_labels or columns > 1:
-            inner = QtGui.QGridLayout()
+            inner = GridLayout()
 
             if outer is None:
                 outer = inner
@@ -666,14 +682,17 @@ class _GroupPanel(object):
 
             row = 0
             if show_left:
-                label_alignment = QtCore.Qt.AlignRight
+                label_alignment = Alignment.BOTTOM_RIGHT
             else:
-                label_alignment = QtCore.Qt.AlignLeft
+                label_alignment = Alignment.BOTTOM_LEFT
 
         else:
             # Use the existing layout if there is one.
             if outer is None:
-                outer = QtGui.QBoxLayout(self.direction)
+                if self.horizontal:
+                    outer = HorizontalLayout()
+                else:
+                    outer = VerticalLayout()
 
             inner = outer
 
@@ -701,7 +720,7 @@ class _GroupPanel(object):
 
                     # Create the label widget.
                     if item.style == 'simple':
-                        label = QtGui.QLabel(label)
+                        label = Label(label)
                     else:
                         label = heading_text(None, text=label).control
 
@@ -734,7 +753,7 @@ class _GroupPanel(object):
                 for i in range(cols):
                     line = QtGui.QFrame()
 
-                    if self.direction == QtGui.QBoxLayout.LeftToRight:
+                    if self.horizontal == QtGui.QBoxLayout.LeftToRight:
                         # Add a vertical separator:
                         line.setFrameShape(QtGui.QFrame.VLine)
                         if row < 0:
@@ -762,13 +781,13 @@ class _GroupPanel(object):
             if all_digits.match( name ):
 
                 # If so, add the appropriate amount of space to the layout:
-                n = int( name )
-                if self.direction == QtGui.QBoxLayout.LeftToRight:
+                spacer = Label()
+                if self.horizontal:
                     # Add a horizontal spacer:
-                    spacer = QtGui.QSpacerItem(n, 1)
+                    spacer.setWidth(name + 'px')
                 else:
                     # Add a vertical spacer:
-                    spacer = QtGui.QSpacerItem(1, n)
+                    spacer.setHeight(name + 'px')
 
                 self._add_widget(inner, spacer, row, col, show_labels)
 
@@ -844,7 +863,7 @@ class _GroupPanel(object):
             item_width = item.width
             item_height = item.height
             if (item_width != -1) or (item_height != -1):
-                is_horizontal = (self.direction == QtGui.QBoxLayout.LeftToRight)
+                is_horizontal = (self.horizontal == QtGui.QBoxLayout.LeftToRight)
 
                 min_size = control.minimumSizeHint()
                 width = min_size.width()
@@ -910,7 +929,7 @@ class _GroupPanel(object):
             elif item.springy:
                 stretch = stretch or 50
             policy = control.sizePolicy()
-            if self.direction == QtGui.QBoxLayout.LeftToRight:
+            if self.horizontal == QtGui.QBoxLayout.LeftToRight:
                 policy.setHorizontalStretch(stretch)
                 if item_resizable or item.springy:
                     policy.setHorizontalPolicy(QtGui.QSizePolicy.Expanding)
@@ -935,22 +954,17 @@ class _GroupPanel(object):
         """
         # If the widget really is a widget then remove any margin so that it
         # fills the cell.
-        if isinstance(w, QtGui.QWidget):
-            wl = w.layout()
+        if not isinstance(w, AbstractLayout):
+            wl = w.getParent()
             if wl is not None:
-                wl.setContentsMargins(0, 0, 0, 0)
+                wl.setMargin(False)
 
         # See if the layout is a grid.
         if row < 0:
-            if isinstance(w, QtGui.QWidget):
-                layout.addWidget(w)
-            elif isinstance(w, QtGui.QLayout):
-                layout.addLayout(w)
-            else:
-                layout.addItem(w)
+            layout.addComponent(w)
 
         else:
-            if self.direction == QtGui.QBoxLayout.LeftToRight:
+            if self.horizontal:
                 # Flip the row and column.
                 row, column = column, row
 
@@ -964,12 +978,10 @@ class _GroupPanel(object):
                    (label_alignment == 0 and self.group.show_left):
                     column += 1
 
-            if isinstance(w, QtGui.QWidget):
-                layout.addWidget(w, row, column, label_alignment)
-            elif isinstance(w, QtGui.QLayout):
-                layout.addLayout(w, row, column, label_alignment)
-            else:
-                layout.addItem(w, row, column, 1, 1, label_alignment)
+            layout.addComponent(w, column, row)
+            if label_alignment is not None:
+                layout.setComponentAlignment(w, label_alignment)
+
 
     def _create_label(self, item, ui, desc, suffix = ':'):
         """Creates an item label.
@@ -978,7 +990,7 @@ class _GroupPanel(object):
         if (label == '') or (label[-1:] in '?=:;,.<>/\\"\'-+#|'):
             suffix = ''
 
-        control = QtGui.QLabel(label + suffix)
+        control = Label(label + suffix)
 
         if item.emphasized:
             self._add_emphasis(control)
