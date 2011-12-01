@@ -133,16 +133,14 @@ class _LiveWindow(BaseDialog):
 
                 if self.is_button(button, 'Undo'):
                     self.undo = self.add_button(button, bbox,
-                            DialogButtonBox.ActionRole, self._on_undo,
-                            False, default=default)
+                            self._on_undo, False, default=default)
                     history.on_trait_change(self._on_undoable, 'undoable',
                             dispatch='ui')
                     if history.can_undo:
                         self._on_undoable(True)
 
                     self.redo = self.add_button(button, bbox,
-                            DialogButtonBox.ActionRole, self._on_redo,
-                            False, 'Redo')
+                            self._on_redo, False, 'Redo')
                     history.on_trait_change(self._on_redoable, 'redoable',
                             dispatch='ui')
                     if history.can_redo:
@@ -150,8 +148,7 @@ class _LiveWindow(BaseDialog):
 
                 elif self.is_button(button, 'Revert'):
                     self.revert = self.add_button(button, bbox,
-                            DialogButtonBox.ResetRole, self._on_revert,
-                            False, default=default)
+                            self._on_revert, False, default=default)
                     history.on_trait_change(self._on_revertable, 'undoable',
                             dispatch='ui')
                     if history.can_undo:
@@ -159,23 +156,19 @@ class _LiveWindow(BaseDialog):
 
                 elif self.is_button(button, 'OK'):
                     self.ok = self.add_button(button, bbox,
-                            None,#DialogButtonBox.AcceptRole,
                             self._on_ok, default=default)
                     ui.on_trait_change(self._on_error, 'errors', dispatch='ui')
 
                 elif self.is_button(button, 'Cancel'):
                     self.add_button(button, bbox,
-                            DialogButtonBox.RejectRole,
                             self.control.reject, default=default)
 
                 elif self.is_button(button, 'Help'):
                     self.add_button(button, bbox,
-                            DialogButtonBox.HelpRole, self._on_help,
-                            default=default)
+                            self._on_help, default=default)
 
                 elif not self.is_button(button, ''):
-                    self.add_button(button, bbox,
-                            DialogButtonBox.ActionRole, default=default)
+                    self.add_button(button, bbox, default=default)
 
         else:
             bbox = None

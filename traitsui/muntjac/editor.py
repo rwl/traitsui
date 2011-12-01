@@ -37,13 +37,13 @@ from constants \
 #-------------------------------------------------------------------------------
 
 class Editor ( UIEditor ):
-    """ Base class for PyQt editors for Traits-based UIs.
+    """ Base class for Muntjac editors for Traits-based UIs.
     """
 
     def clear_layout(self):
         """ Delete the contents of a control's layout.
         """
-        layout = self.control.layout()
+        layout = self.control.getParent()
         while True:
             itm = layout.takeAt(0)
             if itm is None:
@@ -81,8 +81,8 @@ class Editor ( UIEditor ):
             editor.
         """
         new_value = self.str_value
-        if self.control.text() != new_value:
-            self.control.setText( new_value )
+        if self.control.getValue() != new_value:
+            self.control.setValue( new_value )
 
     #---------------------------------------------------------------------------
     #  Handles an error that occurs while setting the object's trait value:
@@ -91,13 +91,7 @@ class Editor ( UIEditor ):
     def error ( self, excp ):
         """ Handles an error that occurs while setting the object's trait value.
         """
-        # Make sure the control is a widget rather than a layout.
-        if isinstance(self.control, QtGui.QLayout):
-            control = self.control.parentWidget()
-        else:
-            control = self.control
-
-        QtGui.QMessageBox.information(control,
+        self.control.getWindow().showNotification(
                 self.description + ' value error', str(excp))
 
     #---------------------------------------------------------------------------

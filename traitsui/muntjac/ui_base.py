@@ -191,7 +191,7 @@ class BasePanel(object):
     #  Creates a user specified button:
     #---------------------------------------------------------------------------
 
-    def add_button ( self, action, bbox, role, method=None, enabled=True,
+    def add_button ( self, action, bbox, method=None, enabled=True,
                      name=None, default=False ):
         """ Creates a button.
         """
@@ -304,35 +304,14 @@ class _StickyDialog(Window):
         """Reimplemented to ignore the Escape key if appropriate, and to ignore
         the Enter key if no default button has been explicitly set."""
 
-        if (e.key() == KeyCode.ENTER and
-               not self._ui.view.default_button):
-            return
-
-        if e.key() == KeyCode.ESCAPE and not self._ok_to_close():
-            return
+#        if (e.key() == KeyCode.ENTER and
+#               not self._ui.view.default_button):
+#            return
+#
+#        if e.key() == KeyCode.ESCAPE and not self._ok_to_close():
+#            return
 
         super(_StickyDialog, self).fireEvent(e)
-
-#    def sizeHint(self):
-#        """Reimplemented to provide an appropriate size hint for the window.
-#        """
-#        size = QtGui.QDialog.sizeHint(self)
-#        view = self._ui.view
-#        if view.width > 0:
-#            size.setWidth(view.width)
-#        if view.height > 0:
-#            size.setHeight(view.height)
-#        return size
-#
-#    def done(self, r):
-#        """Reimplemented to ignore calls to accept() or reject() if
-#        appropriate."""
-#
-#        # If we already have a result then we already know that we are done.
-#        if self._result is not None:
-#            QtGui.QDialog.done(self, self._result)
-#        elif self._ok_to_close(bool(r)):
-#            QtGui.QDialog.done(self, r)
 
     def _ok_to_close(self, is_ok=None):
         """Let the handler decide if the dialog should be closed."""

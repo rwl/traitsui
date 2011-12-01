@@ -28,7 +28,7 @@ import re
 
 from muntjac.api \
     import SplitPanel, Window, HorizontalLayout, VerticalLayout, Label, \
-        GridLayout, Panel, TabSheet
+           GridLayout, Panel, TabSheet, Accordion, Button
 
 from muntjac.ui.alignment import Alignment
 
@@ -76,25 +76,25 @@ all_digits = re.compile(r'\d+')
 
 
 #-------------------------------------------------------------------------------
-#  Create the different panel-based PyQt user interfaces.
+#  Create the different panel-based Muntjac user interfaces.
 #-------------------------------------------------------------------------------
 
 def ui_panel(ui, parent):
-    """Creates a panel-based PyQt user interface for a specified UI object.
+    """Creates a panel-based Muntjac user interface for a specified UI object.
     """
     _ui_panel_for(ui, parent, False)
 
 
 def ui_subpanel(ui, parent):
-    """Creates a subpanel-based PyQt user interface for a specified UI object.
-       A subpanel does not allow control buttons (other than those specified in
-       the UI object) and does not show headers for view titles.
+    """Creates a subpanel-based Muntjac user interface for a specified UI
+       object. A subpanel does not allow control buttons (other than those
+       specified in the UI object) and does not show headers for view titles.
     """
     _ui_panel_for(ui, parent, True)
 
 
 def _ui_panel_for(ui, parent, is_subpanel):
-    """Creates a panel-based PyQt user interface for a specified UI object.
+    """Creates a panel-based Muntjac user interface for a specified UI object.
     """
     ui.control = control = _Panel(ui, parent, is_subpanel).control
 
@@ -116,7 +116,7 @@ def _ui_panel_for(ui, parent, is_subpanel):
 
 
 class _Panel(BasePanel):
-    """PyQt user interface panel for Traits-based user interfaces.
+    """Muntjac user interface panel for Traits-based user interfaces.
     """
 
     def __init__(self, ui, parent, is_subpanel):
@@ -128,8 +128,10 @@ class _Panel(BasePanel):
 
         # Reset any existing history listeners.
         if history is not None:
-            history.on_trait_change(self._on_undoable, 'undoable', remove=True)
-            history.on_trait_change(self._on_redoable, 'redoable', remove=True)
+            history.on_trait_change(self._on_undoable, 'undoable',
+                    remove=True)
+            history.on_trait_change(self._on_redoable, 'redoable',
+                    remove=True)
             history.on_trait_change(self._on_revertable, 'undoable',
                     remove=True)
 
@@ -147,9 +149,10 @@ class _Panel(BasePanel):
             if view.help:
                 self.check_button(buttons, HelpButton)
 
-        if not is_subpanel and history is None:
+        if not is_subpanel and (history is None):
             for button in buttons:
-                if self.is_button(button, 'Undo') or self.is_button(button, 'Revert'):
+                if (self.is_button(button, 'Undo') or
+                    self.is_button(button, 'Revert')):
                     history = ui.history = UndoHistory()
                     break
 
@@ -159,78 +162,55 @@ class _Panel(BasePanel):
         # Suppress the title if this is a subpanel or if we think it should be
         # superceded by the title of an "outer" widget (eg. a dock widget).
         title = view.title
-        if (is_subpanel or (isinstance(parent, QtGui.QMainWindow) and
-                            not isinstance(parent.parent(), QtGui.QDialog)) or
-            isinstance(parent, QtGui.QTabWidget)):
+        if (is_subpanel or (isinstance(parent, MainWindow) and
+                            not isinstance(parent.parent(), Window)) or
+                isinstance(parent, TabSheet)):
             title = ""
 
-        # Panels must be widgets as it is only the TraitsUI PyQt code that can
-        # handle them being layouts as well.  Therefore create a widget if the
-        # panel is not a widget or if we need a title or buttons.
-        if not isinstance(self.control, QtGui.QWidget) or title != "" or has_buttons:
-            w = QtGui.QWidget()
-            layout = QtGui.QVBoxLayout(w)
-            layout.setContentsMargins(0, 0, 0, 0)
+
+        if title != "" or has_buttons:
+            layout = VerticalLayout()
+            layout.setMargin(False)
 
             # Handle any view title.
             if title != "":
                 layout.addWidget(heading_text(None, text=view.title).control)
 
-            if isinstance(self.control, QtGui.QWidget):
-                layout.addWidget(self.control)
-            elif isinstance(self.control, QtGui.QLayout):
-                layout.addLayout(self.control)
+            layout.addComponent(self.control)
 
-            self.control = w
+            self.control = layout
 
             # Add any buttons.
             if has_buttons:
 
-                # Add the horizontal separator
-                separator = QtGui.QFrame()
-                separator.setFrameStyle(QtGui.QFrame.Sunken |
-                                        QtGui.QFrame.HLine)
-                separator.setFixedHeight(2)
-                layout.addWidget(separator)
-
                 # Add the special function buttons
-                bbox = QtGui.QDialogButtonBox(QtCore.Qt.Horizontal)
+                bbox = HorizontalLayout()
                 for button in buttons:
-                    role = QtGui.QDialogButtonBox.ActionRole
                     if self.is_button(button, 'Undo'):
-                        self.undo = self.add_button(button, bbox, role,
-                                                    self._on_undo, False,
-                                                    'Undo')
-                        self.redo = self.add_button(button, bbox, role,
-                                                    self._on_redo, False,
-                                                    'Redo')
-                        history.on_trait_change(self._on_undoable, 'undoable',
-                                                dispatch = 'ui')
-                        history.on_trait_change(self._on_redoable, 'redoable',
-                                                dispatch = 'ui')
+                        self.undo = self.add_button(button, bbox,
+                                self._on_undo, False, 'Undo')
+                        self.redo = self.add_button(button, bbox,
+                                self._on_redo, False, 'Redo')
+                        history.on_trait_change(self._on_undoable,
+                                'undoable', dispatch = 'ui')
+                        history.on_trait_change(self._on_redoable,
+                                'redoable', dispatch = 'ui')
                     elif self.is_button(button, 'Revert'):
-                        role = QtGui.QDialogButtonBox.ResetRole
-                        self.revert = self.add_button(button, bbox, role,
-                                                      self._on_revert, False)
-                        history.on_trait_change(self._on_revertable, 'undoable',
-                                                dispatch = 'ui')
+                        self.revert = self.add_button(button, bbox,
+                                self._on_revert, False)
+                        history.on_trait_change(self._on_revertable,
+                                'undoable', dispatch = 'ui')
                     elif self.is_button(button, 'Help'):
-                        role = QtGui.QDialogButtonBox.HelpRole
-                        self.add_button(button, bbox, role, self._on_help)
+                        self.add_button(button, bbox, self._on_help)
                     elif not self.is_button(button, ''):
-                        self.add_button(button, bbox, role)
-                layout.addWidget(bbox)
-
-        # Ensure the control has a size hint reflecting the View specification.
-        # Yes, this is a hack, but it's too late to repair this convoluted
-        # control building process, so we do what we have to...
-        self.control.sizeHint = _size_hint_wrapper(self.control.sizeHint, ui)
+                        self.add_button(button, bbox)
+                layout.addComponent(bbox)
 
 
 def panel(ui):
-    """Creates a panel-based PyQt user interface for a specified UI object.
+    """Creates a panel-based Muntjac user interface for a specified UI object.
        This function does not modify the UI object passed to it.  The object
-       returned may be either a widget, a layout or None.
+       returned may be either a component or None.
     """
     # Bind the context values to the 'info' object:
     ui.info.bind_context()
@@ -248,17 +228,11 @@ def panel(ui):
         _fill_panel(panel, content, ui)
         panel.ui = ui
 
-    # If the UI is scrollable then wrap the panel in a scroll area.
+    # If the UI is scrollable then wrap the panel in a Panel.
     if ui.scrollable and panel is not None:
-        # Make sure the panel is a widget.
-#        if isinstance(panel, AbstractLayout):
-#            w = QtGui.QWidget()
-#            w.setLayout(panel)
-#            panel = w
-
         sa = Panel()
         sa.addComponent(panel)
-#        sa.setWidgetResizable(True)
+#        sa.getParent().setResizable(True)
         panel = sa
 
     return panel
@@ -272,7 +246,7 @@ def _fill_panel(panel, content, ui, item_handler=None):
     for index, item in enumerate(content):
         page_name = item.get_label(ui)
         if page_name == "":
-           page_name = "Page %d" % index
+            page_name = "Page %d" % index
 
         if isinstance(item, Group):
             if item.selected:
@@ -282,37 +256,25 @@ def _fill_panel(panel, content, ui, item_handler=None):
             page = gp.control
             sub_page = gp.sub_control
 
-            # If the result is the same type with only one page, collapse it
+            # If the result is a TabSheet type with only one page, collapse it
             # down into just the page.
-            if type(sub_page) is type(panel) and sub_page.count() == 1:
-                new = sub_page.widget(0)
-                if isinstance(panel, QtGui.QTabWidget):
-                    sub_page.removeTab(0)
-                else:
-                    sub_page.removeItem(0)
-            elif isinstance(page, QtGui.QWidget):
-                new = page
+            if (isinstance(sub_page, TabSheet)
+                    and sub_page.getComponentCount() == 1):
+                sub_page = sub_page.getTab(0).getComponent()
             else:
-                new = QtGui.QWidget()
-                new.setLayout(page)
-
-            layout = new.layout()
-            if layout is not None:
-                layout.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
-
+                new = page
         else:
-            new = QtGui.QWidget()
-            layout = QtGui.QVBoxLayout(new)
-            layout.setContentsMargins(0, 0, 0, 0)
-            item_handler(item, layout)
+            new = VerticalLayout()
+            new.setMargin(False)
+            item_handler(item, new)
 
         # Add the content.
-        if isinstance(panel, QtGui.QTabWidget):
+        if isinstance(panel, TabSheet):
             panel.addTab(new, page_name)
         else:
-            panel.addItem(new, page_name)
+            panel.addComponent(new, page_name)
 
-    panel.setCurrentIndex(active)
+    panel.setSelectedTab(panel.getTab(active))
 
 
 def _size_hint_wrapper(f, ui):
@@ -362,9 +324,9 @@ def show_help_popup ( event ):
     # Note: The following check is necessary because under Linux, we get back
     # a control which does not have the 'help' trait defined (it is the parent
     # of the object with the 'help' trait):
-    help = getattr( control, 'help', None )
-    if help is not None:
-        html = template.item_html % ( control.GetLabel(), help )
+    _help = getattr( control, 'help', None )
+    if _help is not None:
+        html = template.item_html % ( control.GetLabel(), _help )
         HTMLHelpWindow( control, html, .25, .13 )
 
 
@@ -375,82 +337,82 @@ class _GroupSplitter(SplitPanel):
     def __init__(self, group):
         """ Store the group.
         """
-        QtGui.QSplitter.__init__(self)
+        super(SplitPanel, self).__init__()
         self._group = group
         self._initialized = False
 
-    def resizeEvent(self, event):
-        """ Overridden to position the splitter based on the Group when the
-            application is initializing.
+#    def resizeEvent(self, event):
+#        """ Overridden to position the splitter based on the Group when the
+#            application is initializing.
+#
+#            Because the splitter layout algorithm requires that the available
+#            space be known, we have to wait until the UI that contains this
+#            splitter gives it its initial size.
+#        """
+#        QtGui.QSplitter.resizeEvent(self, event)
+#
+#        parent = self.parent()
+#        if (not self._initialized and parent and
+#            (self.isVisible() or isinstance(parent, QtGui.QMainWindow))):
+#            self._initialized = True
+#            self._resize_items()
 
-            Because the splitter layout algorithm requires that the available
-            space be known, we have to wait until the UI that contains this
-            splitter gives it its initial size.
-        """
-        QtGui.QSplitter.resizeEvent(self, event)
-
-        parent = self.parent()
-        if (not self._initialized and parent and
-            (self.isVisible() or isinstance(parent, QtGui.QMainWindow))):
-            self._initialized = True
-            self._resize_items()
-
-    def _resize_items(self):
-        """ Size the splitter based on the 'width' or 'height' attributes
-            of the Traits UI view elements.
-        """
-        use_widths = (self.orientation() == QtCore.Qt.Horizontal)
-
-        # Get the requested size for the items.
-        sizes = []
-        for item in self._group.content:
-            if use_widths:
-                sizes.append(item.width)
-            else:
-                sizes.append(item.height)
-
-        # Find out how much space is available.
-        if use_widths:
-            total = self.width()
-        else:
-            total = self.height()
-
-        # Allocate requested space.
-        avail = total
-        remain = 0
-        for i, sz in enumerate(sizes):
-            if avail <= 0:
-                break
-
-            if sz >= 0:
-                if sz >= 1:
-                    sz = min(sz, avail)
-                else:
-                    sz *= total
-
-                sz = int(sz)
-                sizes[i] = sz
-                avail -= sz
-            else:
-                remain += 1
-
-        # Allocate the remainder to those parts that didn't request a width.
-        if remain > 0:
-            remain = int(avail / remain)
-
-            for i, sz in enumerate(sizes):
-                if sz < 0:
-                    sizes[i] = remain
-
-        # If all requested a width, allocate the remainder to the last item.
-        else:
-            sizes[-1] += avail
-
-        self.setSizes(sizes)
+#    def _resize_items(self):
+#        """ Size the splitter based on the 'width' or 'height' attributes
+#            of the Traits UI view elements.
+#        """
+#        use_widths = self.getOrientation() == SplitPanel.ORIENTATION_HORIZONTAL
+#
+#        # Get the requested size for the items.
+#        sizes = []
+#        for item in self._group.content:
+#            if use_widths:
+#                sizes.append(item.width)
+#            else:
+#                sizes.append(item.height)
+#
+#        # Find out how much space is available.
+#        if use_widths:
+#            total = self.getWidth()
+#        else:
+#            total = self.getHeight()
+#
+#        # Allocate requested space.
+#        avail = total
+#        remain = 0
+#        for i, sz in enumerate(sizes):
+#            if avail <= 0:
+#                break
+#
+#            if sz >= 0:
+#                if sz >= 1:
+#                    sz = min(sz, avail)
+#                else:
+#                    sz *= total
+#
+#                sz = int(sz)
+#                sizes[i] = sz
+#                avail -= sz
+#            else:
+#                remain += 1
+#
+#        # Allocate the remainder to those parts that didn't request a width.
+#        if remain > 0:
+#            remain = int(avail / remain)
+#
+#            for i, sz in enumerate(sizes):
+#                if sz < 0:
+#                    sizes[i] = remain
+#
+#        # If all requested a width, allocate the remainder to the last item.
+#        else:
+#            sizes[-1] += avail
+#
+#        self.setSizes(sizes)
 
 
 class _GroupPanel(object):
-    """A sub-panel for a single group of items.  It may be either a layout or a
+    """A sub-panel for a single group of items. It may be either a layout or a
        widget.
     """
 
@@ -508,51 +470,36 @@ class _GroupPanel(object):
         elif group.layout == 'split':
             # Create the splitter.
             splitter = _GroupSplitter(group)
-            splitter.setOpaqueResize(False) # Mimic wx backend resize behavior
-            if self.horizontal == QtGui.QBoxLayout.TopToBottom:
-                splitter.setOrientation(QtCore.Qt.Vertical)
-
-            # Make sure the splitter will expand to fill available space
-            policy = splitter.sizePolicy()
-            policy.setHorizontalStretch(50)
-            policy.setVerticalStretch(50)
-            if group.orientation == 'horizontal':
-                policy.setVerticalPolicy(QtGui.QSizePolicy.Expanding)
+            if self.horizontal:
+                splitter.setOrientation(SplitPanel.ORIENTATION_HORIZONTAL)
             else:
-                policy.setHorizontalPolicy(QtGui.QSizePolicy.Expanding)
-            splitter.setSizePolicy(policy)
+                splitter.setOrientation(SplitPanel.ORIENTATION_VERTICAL)
 
             if outer is None:
                 outer = splitter
             else:
-                inner.addWidget(splitter)
+                inner.addComponent(splitter)
 
             # Create an editor.
-            editor = SplitterGroupEditor(control=outer, splitter=splitter,ui=ui)
+            editor = SplitterGroupEditor(control=outer, splitter=splitter,
+                    ui=ui)
             self._setup_editor(group, editor)
 
             self._add_splitter_items(content, splitter)
 
         elif group.layout in ('tabbed', 'fold'):
-            # Create the TabWidget or ToolBox.
+            # Create the TabSheet or Accordion.
             if group.layout == 'tabbed':
-                sub = QtGui.QTabWidget()
+                sub = TabSheet()
             else:
-                sub = QtGui.QToolBox()
-
-            # Give tab/tool widget stretch factor equivalent to default stretch
-            # factory for a resizeable item. See end of '_add_items'.
-            policy = sub.sizePolicy()
-            policy.setHorizontalStretch(50)
-            policy.setVerticalStretch(50)
-            sub.setSizePolicy(policy)
+                sub = Accordion()
 
             _fill_panel(sub, content, self.ui, self._add_page_item)
 
             if outer is None:
                 outer = sub
             else:
-                inner.addWidget(sub)
+                inner.addComponent(sub)
 
             # Create an editor.
             editor = TabbedFoldGroupEditor(container=sub, control=outer, ui=ui)
@@ -563,7 +510,7 @@ class _GroupPanel(object):
             if group.visible_when != '' or group.enabled_when != '':
                 # Make sure that outer is a widget or a layout.
                 if outer is None:
-                    outer = inner = QtGui.QBoxLayout(self.horizontal)
+                    outer = inner = HorizontalLayout()
 
                 # Create an editor.
                 self._setup_editor(group, GroupEditor(control=outer))
@@ -572,12 +519,14 @@ class _GroupPanel(object):
                 layout = self._add_groups(content, inner)
             else:
                 layout = self._add_items(content, inner)
-            layout.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
+
+            for c in layout.getComponentIterator():
+                layout.setComponentAlignment(c, Alignment.TOP_LEFT)
 
             if outer is None:
                 outer = layout
             elif layout is not inner:
-                inner.addLayout(layout)
+                inner.addComponent(layout)
 
         # Publish the top-level widget, layout or None.
         self.control = outer
@@ -598,18 +547,12 @@ class _GroupPanel(object):
 
             # Add the panel to the splitter.
             if panel is not None:
-                if isinstance(panel, QtGui.QLayout):
-                    # A QSplitter needs a widget.
-                    w = QtGui.QWidget()
-                    panel.setContentsMargins(0, 0, 0, 0)
-                    w.setLayout(panel)
-                    panel = w
-
-                layout = panel.layout()
+                layout = panel.getParent()
                 if layout is not None:
-                    layout.setAlignment(QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
+                    for c in layout.getComponentIterator():
+                        layout.setComponentAlignment(c, Alignment.TOP_LEFT)
 
-                splitter.addWidget(panel)
+                splitter.addComponent(panel)
 
     def _setup_editor(self, group, editor):
         """Setup the editor for a group.
@@ -648,7 +591,7 @@ class _GroupPanel(object):
             else:
                 # The sub-group is empty which seems to be used as a way of
                 # providing some whitespace.
-                outer.addWidget(Label(' '))
+                outer.addComponent(Label(' '))
 
         return outer
 
@@ -673,12 +616,12 @@ class _GroupPanel(object):
 
         # See if a grid layout is needed.
         if show_labels or columns > 1:
-            inner = GridLayout()
+            inner = GridLayout(2, len(content))  # FIXME: num rows
 
             if outer is None:
                 outer = inner
             else:
-                outer.addLayout(inner)
+                outer.addComponent(inner)
 
             row = 0
             if show_left:
@@ -750,25 +693,25 @@ class _GroupPanel(object):
                     if show_labels:
                         cols *= 2
 
-                for i in range(cols):
-                    line = QtGui.QFrame()
-
-                    if self.horizontal == QtGui.QBoxLayout.LeftToRight:
-                        # Add a vertical separator:
-                        line.setFrameShape(QtGui.QFrame.VLine)
-                        if row < 0:
-                            inner.addWidget(line)
-                        else:
-                            inner.addWidget(line, i, row)
-                    else:
-                        # Add a horizontal separator:
-                        line.setFrameShape(QtGui.QFrame.HLine)
-                        if row < 0:
-                            inner.addWidget(line)
-                        else:
-                            inner.addWidget(line, row, i)
-
-                    line.setFrameShadow(QtGui.QFrame.Sunken)
+#                for i in range(cols):
+#                    line = QtGui.QFrame()
+#
+#                    if self.horizontal == QtGui.QBoxLayout.LeftToRight:
+#                        # Add a vertical separator:
+#                        line.setFrameShape(QtGui.QFrame.VLine)
+#                        if row < 0:
+#                            inner.addWidget(line)
+#                        else:
+#                            inner.addWidget(line, i, row)
+#                    else:
+#                        # Add a horizontal separator:
+#                        line.setFrameShape(QtGui.QFrame.HLine)
+#                        if row < 0:
+#                            inner.addWidget(line)
+#                        else:
+#                            inner.addWidget(line, row, i)
+#
+#                    line.setFrameShadow(QtGui.QFrame.Sunken)
 
                 # Continue on to the next Item in the list:
                 continue
@@ -855,7 +798,7 @@ class _GroupPanel(object):
 
             # Give the editor focus if it requested it:
             if item.has_focus:
-                control.setFocus()
+                control.focus()
 
             # Set the correct size on the control, as specified by the user:
             stretch = 0
@@ -863,7 +806,7 @@ class _GroupPanel(object):
             item_width = item.width
             item_height = item.height
             if (item_width != -1) or (item_height != -1):
-                is_horizontal = (self.horizontal == QtGui.QBoxLayout.LeftToRight)
+                is_horizontal = self.horizontal
 
                 min_size = control.minimumSizeHint()
                 width = min_size.width()
@@ -887,8 +830,8 @@ class _GroupPanel(object):
                 else:
                     item_height = max(item_height, height)
 
-                control.setMinimumWidth(max(item_width, 0))
-                control.setMinimumHeight(max(item_height, 0))
+                control.setWidth(max(item_width, 0))
+                control.setHeight(max(item_height, 0))
 
             # Bind the editor into the UIInfo object name space so it can be
             # referred to by a Handler while the user interface is active:
@@ -921,23 +864,23 @@ class _GroupPanel(object):
             # Add the created editor control to the layout with the appropriate
             # size and stretch policies:
             ui._scrollable |= scrollable
-            item_resizable  = ((item.resizable is True) or
-                               ((item.resizable is Undefined) and scrollable))
-            if item_resizable:
-                stretch = stretch or 50
-                self.resizable = True
-            elif item.springy:
-                stretch = stretch or 50
-            policy = control.sizePolicy()
-            if self.horizontal == QtGui.QBoxLayout.LeftToRight:
-                policy.setHorizontalStretch(stretch)
-                if item_resizable or item.springy:
-                    policy.setHorizontalPolicy(QtGui.QSizePolicy.Expanding)
-            else:
-                policy.setVerticalStretch(stretch)
-                if item_resizable or item.springy:
-                    policy.setVerticalPolicy(QtGui.QSizePolicy.Expanding)
-            control.setSizePolicy(policy)
+#            item_resizable  = ((item.resizable is True) or
+#                               ((item.resizable is Undefined) and scrollable))
+#            if item_resizable:
+#                stretch = stretch or 50
+#                self.resizable = True
+#            elif item.springy:
+#                stretch = stretch or 50
+#            policy = control.sizePolicy()
+#            if self.horizontal:
+#                policy.setHorizontalStretch(stretch)
+#                if item_resizable or item.springy:
+#                    policy.setHorizontalPolicy(QtGui.QSizePolicy.Expanding)
+#            else:
+#                policy.setVerticalStretch(stretch)
+#                if item_resizable or item.springy:
+#                    policy.setVerticalPolicy(QtGui.QSizePolicy.Expanding)
+#            control.setSizePolicy(policy)
 
             # FIXME: Need to decide what to do about border_size and padding
             self._add_widget(inner, control, row, col, show_labels)
@@ -948,7 +891,7 @@ class _GroupPanel(object):
         return outer
 
     def _add_widget(self, layout, w, row, column, show_labels,
-                    label_alignment=None):#QtCore.Qt.AlignmentFlag(0)):
+                    label_alignment=None):
         """Adds a widget to a layout taking into account the orientation and
            the position of any labels.
         """
@@ -974,8 +917,8 @@ class _GroupPanel(object):
 
                 # Determine whether to place widget on left or right of
                 # "logical" column.
-                if (label_alignment != 0 and not self.group.show_left) or \
-                   (label_alignment == 0 and self.group.show_left):
+                if (label_alignment is not None and not self.group.show_left) or \
+                   (label_alignment is None and self.group.show_left):
                     column += 1
 
             layout.addComponent(w, column, row)
@@ -995,29 +938,18 @@ class _GroupPanel(object):
         if item.emphasized:
             self._add_emphasis(control)
 
-        # FIXME: Decide what to do about the help.  (The non-standard wx way,
-        # What's This style help, both?)
-        #wx.EVT_LEFT_UP( control, show_help_popup )
+        # FIXME: Decide what to do about the help.
         control.help = item.get_help(ui)
 
         if desc != '':
-            control.setToolTip('Specifies ' + desc)
+            control.setDecription('Specifies ' + desc)
 
         return control
 
     def _add_emphasis(self, control):
         """Adds emphasis to a specified control's font.
         """
-        # Set the foreground colour.
-        pal = QtGui.QPalette(control.palette())
-        pal.setColor(QtGui.QPalette.WindowText, QtGui.QColor(0, 0, 127))
-        control.setPalette(pal)
-
-        # Set the font.
-        font = QtGui.QFont(control.font())
-        font.setBold(True)
-        font.setPointSize(font.pointSize())
-        control.setFont(font)
+        control.addStyleName('emph')
 
 
 class GroupEditor(Editor):
@@ -1034,7 +966,7 @@ class SplitterGroupEditor(GroupEditor):
     """ A pseudo-editor that allows a group with a 'split' layout to be managed.
     """
 
-    # The QSplitter for the group
+    # The SplitPanel for the group
     splitter = Instance(_GroupSplitter)
 
     #-- UI preference save/restore interface -----------------------------------
@@ -1048,13 +980,12 @@ class SplitterGroupEditor(GroupEditor):
         else:
             structure = prefs
 
-        self.splitter._resized = True
-        self.splitter.restoreState(structure)
+        self.splitter.setSplitPosition(structure)
 
     def save_prefs(self):
         """ Returns any user preference information associated with the editor.
         """
-        return { 'structure': str(self.splitter.saveState()) }
+        return { 'structure': str(self.splitter.getSplitPosition()) }
 
 
 class TabbedFoldGroupEditor(GroupEditor):
@@ -1062,7 +993,7 @@ class TabbedFoldGroupEditor(GroupEditor):
         be managed.
     """
 
-    # The QTabWidget or QToolBox for the group
+    # The TabSheet or Accordion for the group
     container = Any
 
     #-- UI preference save/restore interface -----------------------------------
@@ -1076,12 +1007,14 @@ class TabbedFoldGroupEditor(GroupEditor):
         else:
             current_index = prefs
 
-        self.container.setCurrentIndex(int(current_index))
+        tab = self.container.getSelectedTab( int(current_index) )
+        self.container.setSelectedTab(tab)
 
     def save_prefs(self):
         """ Returns any user preference information associated with the editor.
         """
-        return { 'current_index': str(self.container.currentIndex()) }
+        tab = self.container.getSelectedTab()
+        return { 'current_index': str(self.container.getTabPosition(tab)) }
 
 
 #-------------------------------------------------------------------------------
@@ -1099,23 +1032,22 @@ class HTMLHelpWindow ( Window ):
     def __init__ ( self, parent, html, scale_dx, scale_dy ):
         """ Initializes the object.
         """
-        QtGui.QDialog.__init__(self, parent)
-        layout = QtGui.QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        super(HTMLHelpWindow, self).__init__()
+        self.setParent(parent)
+
+        layout = VerticalLayout()
+        layout.setMargin(False)
 
         # Create the html control
-        html_control = QtWebKit.QWebView()
-        html_control.setSizePolicy(QtGui.QSizePolicy.Expanding,
-                                   QtGui.QSizePolicy.Expanding)
-        html_control.setHtml(html)
-        layout.addWidget(html_control)
+        html_control = Label(html)
+        html_control.setContentMode(Label.CONTENT_XHTML)
+        layout.addComponent(html_control)
 
         # Create the OK button
-        bbox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok,
-                                      QtCore.Qt.Horizontal)
-        QtCore.QObject.connect(bbox, QtCore.SIGNAL('accepted()'),
-                               self, QtCore.SLOT('accept()'))
-        layout.addWidget(bbox)
+        ok = Button('OK')
+        # FIXME: add event handler
+        layout.addComponent(ok)
+        layout.setComponentAlignment(ok, Alignment.BOTTOM_RIGHT)
 
         # Position and show the dialog
         position_window(self, parent=parent)

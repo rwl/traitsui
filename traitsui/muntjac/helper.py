@@ -28,6 +28,8 @@ import os.path
 
 from muntjac.api import Button
 
+from muntjac.ui.component import IComponent
+
 from traits.api \
     import Enum, CTrait, BaseTraitHandler, TraitError
 
@@ -82,37 +84,35 @@ def position_window ( window, width = None, height = None, parent = None ):
         that the window completely fits on the screen if possible.
     """
     # Get the available geometry of the screen containing the window.
-    sgeom = QtGui.QApplication.desktop().availableGeometry(window)
-    screen_dx = sgeom.width()
-    screen_dy = sgeom.height()
+    context = window.getApplication().getContext()
+    webBrowser = context.getBrowser()
+    screen_dx = webBrowser.getScreenWidth()
+    screen_dy = webBrowser.getScreenHeight()
 
     # Use the frame geometry even though it is very unlikely that the X11 frame
     # exists at this point.
-    fgeom = window.frameGeometry()
-    width = width or fgeom.width()
-    height = height or fgeom.height()
+    width = width or window.getWidth()
+    height = height or window.getHeight()
 
     if parent is None:
-        parent = window._parent
+        parent = window.getParent()
 
     if parent is None:
         # Center the popup on the screen.
-        window.move((screen_dx - width) / 2, (screen_dy - height) / 2)
+        window.center()
         return
 
     # Calculate the desired size of the popup control:
-    if isinstance(parent, QtGui.QWidget):
-        gpos = parent.mapToGlobal(QtCore.QPoint())
-        x = gpos.x()
-        y = gpos.y()
-        cdx = parent.width()
-        cdy = parent.height()
+    if isinstance(parent, IComponent):
+        x = parent.getPositionX()
+        y = parent.getPositionY()
+        cdx = parent.getWidth()
+        cdy = parent.getHeight()
 
         # Get the frame height of the parent and assume that the window will
         # have a similar frame.  Note that we would really like the height of
         # just the top of the frame.
-        pw = parent.window()
-        fheight = pw.frameGeometry().height() - pw.height()
+        fheight = 0
     else:
         # Special case of parent being a screen position and size tuple (used
         # to pop-up a dialog for a table cell):
@@ -124,8 +124,8 @@ def position_window ( window, width = None, height = None, parent = None ):
     y += cdy + fheight
 
     # Position the window (making sure it will fit on the screen).
-    window.move(max(0, min(x, screen_dx - width)),
-                max(0, min(y, screen_dy - height)))
+    window.setPositionX(max(0, min(x, screen_dx - width)))
+    window.setPositionY(max(0, min(y, screen_dy - height)))
 
 #-------------------------------------------------------------------------------
 #  Restores the user preference items for a specified UI:
@@ -136,7 +136,11 @@ def restore_window ( ui ):
     """
     prefs = ui.restore_prefs()
     if prefs is not None:
-        ui.control.setGeometry( *prefs )
+        x, y, w, h = prefs
+        ui.control.setPositionX(x)
+        ui.control.setPositionY(y)
+        ui.control.setWidth(w)
+        ui.control.setHeight(h)
 
 #-------------------------------------------------------------------------------
 #  Saves the user preference items for a specified UI:
@@ -145,8 +149,9 @@ def restore_window ( ui ):
 def save_window ( ui ):
     """ Saves the user preference items for a specified UI.
     """
-    geom = ui.control.geometry()
-    ui.save_prefs( (geom.x(), geom.y(), geom.width(), geom.height()) )
+    w = ui.control
+    ui.save_prefs( (w.getPositionX(), w.getPositionY(),
+                    w.getWidth(), w.getHeight()) )
 
 #-------------------------------------------------------------------------------
 #  Recomputes the mappings for a new set of enumeration values:
@@ -198,52 +203,6 @@ def open_fbi():
             traceback.print_exc()
     except ImportError:
         pass
-
-#-------------------------------------------------------------------------------
-#  'IconButton' class:
-#-------------------------------------------------------------------------------
-
-class IconButton(Button):
-    """ The IconButton class is a push button that contains a small image or a
-        standard icon provided by the current style.
-    """
-
-    def __init__(self, icon, slot):
-        """ Initialise the button.  icon is either the name of an image file or
-            one of the QtGui.QStyle.SP_* values.
-        """
-        QtGui.QPushButton.__init__(self)
-
-        # Get the current style.
-        sty = QtGui.QApplication.instance().style()
-
-        # Get the minimum icon size to use.
-        ico_sz = sty.pixelMetric(QtGui.QStyle.PM_ButtonIconSize)
-
-        if isinstance(icon, basestring):
-            pm = pixmap_cache(icon)
-
-            # Increase the icon size to accomodate the image if needed.
-            pm_width = pm.width()
-            pm_height = pm.height()
-
-            if ico_sz < pm_width:
-                ico_sz = pm_width
-
-            if ico_sz < pm_height:
-                ico_sz = pm_height
-
-            ico = QtGui.QIcon(pm)
-        else:
-            ico = sty.standardIcon(icon)
-
-        # Configure the button.
-        self.setIcon(ico)
-        self.setMaximumSize(ico_sz, ico_sz)
-        self.setFlat(True)
-        self.setFocusPolicy(QtCore.Qt.NoFocus)
-
-        QtCore.QObject.connect(self, QtCore.SIGNAL('clicked()'), slot)
 
 #-------------------------------------------------------------------------------
 #  Dock-related stubs.
