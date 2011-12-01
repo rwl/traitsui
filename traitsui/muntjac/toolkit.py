@@ -322,12 +322,16 @@ class GUIToolkit ( Toolkit ):
         """
         # Block signals to prevent any editors from being updated (the control
         # will not be deleted immediately).
-        control.blockSignals(True)
+#        control.blockSignals(True)
 
         # This may be called from within the finished() signal handler so we
         # need to do the delete after the handler has returned.
-        control.hide()
-        control.deleteLater()
+#        control.setVisible(False)
+#        control._deleteLater = True
+
+        parent = control.getParent()
+        if parent is not None:
+            parent.removeWindow(control)
 
     #--------------------------------------------------------------------------
     #  Destroys all of the child controls of a specified GUI toolkit control:

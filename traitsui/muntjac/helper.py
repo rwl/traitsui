@@ -30,6 +30,8 @@ from muntjac.api import Button, Window, VerticalLayout, Panel, Application
 
 from muntjac.ui.component import IComponent
 
+from muntjac.ui.button import IClickListener
+
 from traits.api \
     import Enum, CTrait, BaseTraitHandler, TraitError
 
@@ -257,13 +259,24 @@ class MainWindow(Window):
 #  Simple application
 #-------------------------------------------------------------------------------
 
-class SimpleApplication(Application):
+class SimpleApplication(Application, IClickListener):
 
     ui = None
 
-#    def __init__(self, ui):
-#        super(Application, self).__init__()
-#        self.ui = ui
-
     def init(self):
-        self.setMainWindow(self.ui)
+        self._mw = mw = Window()
+#        ct = Button('Configure traits...', self)
+#        mw.addComponent(ct)
+        self.setMainWindow(self._mw)
+
+        self.configureTraits()
+
+    def configureTraits(self):
+        self._mw.addWindow(self.ui)
+        self.ui.center()
+
+    def buttonClick(self, event):
+        if self._mw.getParent() is not None:
+            self.getMainWindow().showNotification('Already configuring traits')
+        else:
+            self.configureTraits()

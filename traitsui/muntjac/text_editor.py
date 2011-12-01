@@ -91,7 +91,8 @@ class SimpleEditor ( Editor, IValueChangeListener, IBlurListener ):
         if multi_line:
             self.scrollable = True
 
-        control = wtype(self.str_value)
+        control = wtype()
+        control.setValue( str(self.str_value) )
 
         if factory.auto_set and not factory.is_grid_cell:
             control.addListener(self, IValueChangeListener)
@@ -148,7 +149,7 @@ class SimpleEditor ( Editor, IValueChangeListener, IBlurListener ):
 
         if unequal:
             self._no_update = True
-            self.control.setValue(self.str_value)
+            self.control.setValue( str(self.str_value) )
             self._no_update = False
 
         if self._error is not None:

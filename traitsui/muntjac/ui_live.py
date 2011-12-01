@@ -161,7 +161,7 @@ class _LiveWindow(BaseDialog):
 
                 elif self.is_button(button, 'Cancel'):
                     self.add_button(button, bbox,
-                            self.control.reject, default=default)
+                            self._on_cancel, default=default)
 
                 elif self.is_button(button, 'Help'):
                     self.add_button(button, bbox,
@@ -204,3 +204,12 @@ class _LiveWindow(BaseDialog):
             return True
 
         return False
+
+    #---------------------------------------------------------------------------
+    #  Handles the user clicking the 'Cancel' button:
+    #---------------------------------------------------------------------------
+
+    def _on_cancel ( self, event = None ):
+        """ Handles the user clicking the **Cancel** button.
+        """
+        self.close(False)

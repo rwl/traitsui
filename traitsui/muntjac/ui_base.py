@@ -25,7 +25,7 @@ from muntjac.main import muntjac
 from muntjac.api \
     import Window, VerticalLayout, Button, HorizontalLayout, Label
 
-from muntjac.ui.window import CloseEvent
+from muntjac.ui.window import CloseEvent, ICloseListener
 from muntjac.ui.button import ClickEvent
 
 from muntjac.event.shortcut_action import KeyCode
@@ -205,7 +205,7 @@ class BasePanel(object):
         if name is None:
             name = action.name
         id     = action.id
-        button = Button(name)
+        button = Button( str(name) )
         bbox.addComponent(button)
 #        button.setAutoDefault(False)
         if default:
@@ -272,7 +272,7 @@ class BasePanel(object):
         self.revert.setEnabled(state)
 
 
-class _StickyDialog(MainWindow):
+class _StickyDialog(Window):
     """A Window that will only close if the traits handler allows it."""
 
     def __init__(self, ui, parent):
@@ -349,29 +349,32 @@ class BaseDialog(BasePanel):
         control.setModal(style == BaseDialog.MODAL)
         control.setCaption(view.title or DefaultTitle)
 
-        control.addCallback(self._on_finished, CloseEvent)
+        control.addListener(self, ICloseListener)
 
     def add_contents(self, panel, buttons):
         """Add a panel (either component or None) and optional buttons
         to the dialog."""
 
+        self._add_menubar()
+        self._add_toolbar()
+
         if panel is not None:
-            self.control.setCentralComponent(panel)
+            self.control.addComponent(panel)
 
         # Add the optional buttons.
         if buttons is not None:
             self.control.addComponent(buttons)
 
-        # Add the menu bar, tool bar and status bar (if any).
-        self._add_menubar()
-        self._add_toolbar()
         self._add_statusbar()
 
     def close(self, rc=True):
         """Close the dialog and set the given return code."""
 
+        self.control.close()
+
         self.ui.dispose(rc)
-        self.ui = self.control = None
+#        self.ui = self.control = None
+
 
     @staticmethod
     def display_ui(ui, parent, style):
@@ -402,7 +405,7 @@ class BaseDialog(BasePanel):
         else:
             SimpleApplication.ui = ui.control
 
-            muntjac(SimpleApplication)
+            muntjac(SimpleApplication, nogui=True, debug=True)
 
 
     def set_icon(self, icon=None):
@@ -430,7 +433,7 @@ class BaseDialog(BasePanel):
         menubar = self.ui.view.menubar
         if menubar is not None:
             self._last_group = self._last_parent = None
-            self.control.setMenuBar(
+            self.control.addComponent(
                 menubar.create_menu_bar( self.control, self ) )
             self._last_group = self._last_parent = None
 
@@ -446,7 +449,7 @@ class BaseDialog(BasePanel):
             self._last_group = self._last_parent = None
             mj_toolbar = toolbar.create_tool_bar( self.control, self )
 #            mj_toolbar.setMovable( False )
-            self.control.setToolBar( mj_toolbar )
+            self.control.addComponent( mj_toolbar )
             self._last_group = self._last_parent = None
 
     #---------------------------------------------------------------------------
@@ -486,7 +489,7 @@ class BaseDialog(BasePanel):
                 obj.on_trait_change(set_text, name, dispatch='ui')
                 listeners.append((obj, set_text, name))
 
-            self.control.setStatusBar(control)
+            self.control.addComponent(control)
             self.ui._statusbar = listeners
 
     def _set_status_text(self, control):

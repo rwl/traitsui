@@ -154,7 +154,7 @@ class ReadonlyEditor ( Editor ):
         """ Updates the editor when the object trait changes externally to the
             editor.
         """
-        self.control.setValue(self.str_value)
+        self.control.setValue( str(self.str_value) )
 
 #-------------------------------------------------------------------------------
 #  '_SimpleField' class:
