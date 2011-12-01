@@ -26,7 +26,7 @@
 
 import toolkit
 
-# Reference to the GUIToolkit object for PyQt.
+# Reference to the GUIToolkit object for Muntjac.
 toolkit = toolkit.GUIToolkit()
 
 # EOF -------------------------------------------------------------------------

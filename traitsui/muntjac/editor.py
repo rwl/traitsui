@@ -112,7 +112,7 @@ class Editor ( UIEditor ):
         if control is None:
             control = self.control
 
-        control.setToolTip( desc )
+        control.setDescription( desc )
 
         return True
 
@@ -220,18 +220,6 @@ class Editor ( UIEditor ):
         for item in control:
             if item is None:
                 continue
-
-            pal = QtGui.QPalette(item.palette())
-
-            if state:
-                color = ErrorColor
-                if getattr( item, '_ok_color', None ) is None:
-                    item._ok_color = QtGui.QColor(pal.color(QtGui.QPalette.Base))
-            else:
-                color = getattr( item, '_ok_color', OKColor )
-
-            pal.setColor(QtGui.QPalette.Base, color)
-            item.setPalette(pal)
 
     #---------------------------------------------------------------------------
     #  Handles the editor's invalid state changing:

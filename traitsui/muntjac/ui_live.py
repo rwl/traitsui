@@ -57,7 +57,7 @@ def ui_popup(ui, parent):
 
 
 def _ui_dialog(ui, parent, style):
-    """Creates a live PyQt user interface for a specified UI object.
+    """Creates a live Muntjac user interface for a specified UI object.
     """
     if ui.owner is None:
         ui.owner = _LiveWindow()

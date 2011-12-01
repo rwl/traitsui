@@ -148,7 +148,7 @@ class GUIToolkit ( Toolkit ):
         window = ui.control
 
         # Set up the default position of the window:
-        parent = window.parent()
+        parent = window.getParent()
         if parent is None:
             px = 0
             py = 0
@@ -160,12 +160,9 @@ class GUIToolkit ( Toolkit ):
             pdx = parent.width()
             pdy = parent.height()
 
-        # Get the window's prefered size.
-        size_hint = window.sizeHint()
-
         # Calculate the correct width and height for the window:
-        cur_width = size_hint.width()
-        cur_height = size_hint.height()
+        cur_width = window.getWidth()
+        cur_height = window.getHeight()
         width  = view.width
         height = view.height
 
@@ -210,14 +207,10 @@ class GUIToolkit ( Toolkit ):
             y = int( y )
 
         # Position and size the window as requested:
-        raise NotImplementedError
-#        layout = window.layout()
-#        if layout.sizeConstraint() == QtGui.QLayout.SetFixedSize:
-#            layout.setSizeConstraint( QtGui.QLayout.SetDefaultConstraint )
-#            window.move( max( 0, x ), max( 0, y ) )
-#            window.setFixedSize( QtCore.QSize ( width, height ) )
-#        else:
-#            window.setGeometry( max( 0, x ), max( 0, y ), width, height )
+        window.setPositionX(max( 0, x ))
+        window.setPositionY(max( 0, y ))
+        window.setWidth(float(width))
+        window.setHeight(float(height))
 
     #--------------------------------------------------------------------------
     #  Shows a 'Help' window for a specified UI and control:
@@ -296,7 +289,6 @@ class GUIToolkit ( Toolkit ):
             return
 
         elif events == 'keys':
-            raise NotImplementedError
 #            class KeyEventHook(QtCore.QObject):
 #                def eventFilter(self, object, event):
 #                    if event.type() == QtCore.QEvent.KeyPress:
@@ -308,7 +300,8 @@ class GUIToolkit ( Toolkit ):
             # filtering, so we store a reference to it here to ensure that it's
             # not garbage collected prematurely.
 #            ui._key_event_hook = KeyEventHook()
-            control.installEventFilter(ui._key_event_hook)
+#            control.installEventFilter(ui._key_event_hook)
+            pass
 
     #--------------------------------------------------------------------------
     #  Indicates that an event should continue to be processed by the toolkit

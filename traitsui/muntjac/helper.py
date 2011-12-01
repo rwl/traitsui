@@ -26,7 +26,7 @@
 
 import os.path
 
-from muntjac.api import Button
+from muntjac.api import Button, Window, VerticalLayout, Panel, Application
 
 from muntjac.ui.component import IComponent
 
@@ -209,3 +209,61 @@ def open_fbi():
 #-------------------------------------------------------------------------------
 
 DockStyle = Enum('horizontal', 'vertical', 'tab', 'fixed')
+
+#-------------------------------------------------------------------------------
+#  Main window
+#-------------------------------------------------------------------------------
+
+class MainWindow(Window):
+
+    def __init__(self, caption=''):
+        super(MainWindow, self).__init__(caption, None)
+
+        self._menuBar = Panel()
+        self._toolBar = Panel()
+        self._centralComponent = Panel()
+        self._statusBar = Panel()
+
+        self.addComponent(self._menuBar)
+        self.addComponent(self._toolBar)
+        self.addComponent(self._centralComponent)
+        self.addComponent(self._statusBar)
+
+    def setMenuBar(self, c):
+        self._menuBar = c
+
+    def getMenuBar(self):
+        return self._menuBar
+
+    def setToolBar(self, c):
+        self._toolBar = c
+
+    def getToolBar(self):
+        return self._toolBar
+
+    def setCentralComponent(self, c):
+        self._centralComponent = c
+
+    def getCentralComponent(self):
+        return self._centralComponent
+
+    def setStatusBar(self, c):
+        self._statusBar = c
+
+    def getStatusBar(self, c):
+        return self._statusBar
+
+#-------------------------------------------------------------------------------
+#  Simple application
+#-------------------------------------------------------------------------------
+
+class SimpleApplication(Application):
+
+    ui = None
+
+#    def __init__(self, ui):
+#        super(Application, self).__init__()
+#        self.ui = ui
+
+    def init(self):
+        self.setMainWindow(self.ui)

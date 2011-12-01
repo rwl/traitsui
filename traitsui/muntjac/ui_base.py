@@ -20,6 +20,8 @@
    dialogs.
 """
 
+from muntjac.main import muntjac
+
 from muntjac.api \
     import Window, VerticalLayout, Button, HorizontalLayout, Label
 
@@ -44,7 +46,7 @@ from editor \
     import Editor
 
 from helper \
-    import restore_window, save_window
+    import restore_window, save_window, MainWindow, SimpleApplication
 
 
 #-------------------------------------------------------------------------------
@@ -270,23 +272,14 @@ class BasePanel(object):
         self.revert.setEnabled(state)
 
 
-class _StickyDialog(Window):
+class _StickyDialog(MainWindow):
     """A Window that will only close if the traits handler allows it."""
 
     def __init__(self, ui, parent):
         """Initialise the dialog."""
 
-        Window.__init__(self, parent)
-
-        # Create the main window so we can add toolbars etc.
-        self._mw = Window()
-        layout = VerticalLayout()
-        layout.setMargin(False)
-        layout.addComponent(self._mw)
-        self.addComponent(layout)
-
-        # Set the dialog's window flags and properties.
-        self._mw.setResizable(ui.view.resizable)
+        super(_StickyDialog, self).__init__()
+        self.setParent(parent)
 
         self._ui = ui
         self._result = None
@@ -359,22 +352,15 @@ class BaseDialog(BasePanel):
         control.addCallback(self._on_finished, CloseEvent)
 
     def add_contents(self, panel, buttons):
-        """Add a panel (either a widget, layout or None) and optional buttons
+        """Add a panel (either component or None) and optional buttons
         to the dialog."""
 
-        # If the panel is a layout then provide a widget for it.
-#        if isinstance(panel, QtGui.QLayout):
-#            w = QtGui.QWidget()
-#            panel.setContentsMargins(0, 0, 0, 0)
-#            w.setLayout(panel)
-#            panel = w
-
         if panel is not None:
-            self.control._mw.addComponent(panel)
+            self.control.setCentralComponent(panel)
 
         # Add the optional buttons.
         if buttons is not None:
-            self.control.getParent().addComponent(buttons)
+            self.control.addComponent(buttons)
 
         # Add the menu bar, tool bar and status bar (if any).
         self._add_menubar()
@@ -408,11 +394,16 @@ class BaseDialog(BasePanel):
         ui.handler.position(ui.info)
         restore_window(ui)
 
-        if style == BaseDialog.NONMODAL:
-            ui.control.show()
-        else:
+        if style != BaseDialog.NONMODAL:
             ui.control.setModal(True)
-            ui.control.exec_()
+
+        if parent is not None:
+            parent.addWindow(ui.control)
+        else:
+            SimpleApplication.ui = ui.control
+
+            muntjac(SimpleApplication)
+
 
     def set_icon(self, icon=None):
         """Sets the dialog's icon."""
@@ -439,7 +430,7 @@ class BaseDialog(BasePanel):
         menubar = self.ui.view.menubar
         if menubar is not None:
             self._last_group = self._last_parent = None
-            self.control.getParent().setMenuBar(
+            self.control.setMenuBar(
                 menubar.create_menu_bar( self.control, self ) )
             self._last_group = self._last_parent = None
 
@@ -455,7 +446,7 @@ class BaseDialog(BasePanel):
             self._last_group = self._last_parent = None
             mj_toolbar = toolbar.create_tool_bar( self.control, self )
 #            mj_toolbar.setMovable( False )
-            self.control._mw.addToolBar( mj_toolbar )
+            self.control.setToolBar( mj_toolbar )
             self._last_group = self._last_parent = None
 
     #---------------------------------------------------------------------------
@@ -495,7 +486,7 @@ class BaseDialog(BasePanel):
                 obj.on_trait_change(set_text, name, dispatch='ui')
                 listeners.append((obj, set_text, name))
 
-            self.control._mw.setStatusBar(control)
+            self.control.setStatusBar(control)
             self.ui._statusbar = listeners
 
     def _set_status_text(self, control):
