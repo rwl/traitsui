@@ -61,6 +61,7 @@ class SimpleEditor ( Editor, IClickListener ):
             widget.
         """
         self.control = CheckBox()
+        self.control.setImmediate(True)
         self.control.addListener(self, IClickListener)
         self.set_tooltip()
 
@@ -101,7 +102,9 @@ class ReadonlyEditor ( Editor ):
             widget.
         """
         self.control = TextField()
-        self.control.setReadOnly(True)
+#        self.control.setReadOnly(True)
+        self.control.setEnabled(False)
+        self.control.setWidth('100%')
 
     #---------------------------------------------------------------------------
     #  Updates the editor when the object trait changes external to the editor:

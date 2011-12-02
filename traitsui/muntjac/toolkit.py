@@ -40,6 +40,18 @@ from traitsui.toolkit import Toolkit
 from constants import screen_dx, screen_dy
 
 #------------------------------------------------------------------------------
+#  Handles UI notification handler requests:
+#------------------------------------------------------------------------------
+
+def ui_handler ( handler, *args ):
+    """ Handles UI notification handler requests.
+    """
+    handler(*args)
+
+# Tell the traits notification handlers to use this UI handler
+set_ui_handler( ui_handler )
+
+#------------------------------------------------------------------------------
 #  'GUIToolkit' class:
 #------------------------------------------------------------------------------
 

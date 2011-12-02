@@ -362,9 +362,9 @@ class BaseDialog(BasePanel):
         to the dialog."""
 
         content = self.control.getContent()
-        content.setWidth('-1px')
-        content.setHeight('-1px')
+        content.setSizeUndefined()
         content.setSpacing(True)
+        content.setMargin(True)
 
         self._add_menubar()
         self._add_toolbar()

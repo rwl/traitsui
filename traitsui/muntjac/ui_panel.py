@@ -583,6 +583,8 @@ class _GroupPanel(object):
             else:
                 outer = VerticalLayout()
 
+            outer.setSizeUndefined()
+
         # Process each group.
         for subgroup in content:
             panel = _GroupPanel(subgroup, self.ui).control
@@ -936,8 +938,7 @@ class _GroupPanel(object):
             suffix = ''
 
         control = Label(label + suffix)
-        control.setWidth('-1px')
-        control.setHeight('-1px')
+        control.setSizeUndefined()
 
         if item.emphasized:
             self._add_emphasis(control)
