@@ -162,15 +162,14 @@ class _Panel(BasePanel):
         # Suppress the title if this is a subpanel or if we think it should be
         # superceded by the title of an "outer" widget (eg. a dock widget).
         title = view.title
-        if (is_subpanel or (isinstance(parent, MainWindow) and
-                            not isinstance(parent.parent(), Window)) or
+        if (is_subpanel or (isinstance(parent, Window) and
+                            not isinstance(parent.getParent(), Window)) or
                 isinstance(parent, TabSheet)):
             title = ""
 
 
         if title != "" or has_buttons:
             layout = VerticalLayout()
-            layout.setMargin(False)
 
             # Handle any view title.
             if title != "":
@@ -185,6 +184,7 @@ class _Panel(BasePanel):
 
                 # Add the special function buttons
                 bbox = HorizontalLayout()
+
                 for button in buttons:
                     if self.is_button(button, 'Undo'):
                         self.undo = self.add_button(button, bbox,
@@ -204,6 +204,7 @@ class _Panel(BasePanel):
                         self.add_button(button, bbox, self._on_help)
                     elif not self.is_button(button, ''):
                         self.add_button(button, bbox)
+
                 layout.addComponent(bbox)
 
 
@@ -520,8 +521,8 @@ class _GroupPanel(object):
             else:
                 layout = self._add_items(content, inner)
 
-            for c in layout.getComponentIterator():
-                layout.setComponentAlignment(c, Alignment.TOP_LEFT)
+#            for c in layout.getComponentIterator():
+#                layout.setComponentAlignment(c, Alignment.TOP_LEFT)
 
             if outer is None:
                 outer = layout
@@ -616,7 +617,8 @@ class _GroupPanel(object):
 
         # See if a grid layout is needed.
         if show_labels or columns > 1:
-            inner = GridLayout(2, len(content))  # FIXME: num rows
+            inner = GridLayout(columns * 2, len(content))
+            inner.setSpacing(True)
 
             if outer is None:
                 outer = inner
@@ -625,9 +627,9 @@ class _GroupPanel(object):
 
             row = 0
             if show_left:
-                label_alignment = Alignment.BOTTOM_RIGHT
+                label_alignment = Alignment.MIDDLE_RIGHT
             else:
-                label_alignment = Alignment.BOTTOM_LEFT
+                label_alignment = Alignment.MIDDLE_LEFT
 
         else:
             # Use the existing layout if there is one.
@@ -934,6 +936,8 @@ class _GroupPanel(object):
             suffix = ''
 
         control = Label(label + suffix)
+        control.setWidth('-1px')
+        control.setHeight('-1px')
 
         if item.emphasized:
             self._add_emphasis(control)

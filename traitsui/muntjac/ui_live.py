@@ -114,6 +114,7 @@ class _LiveWindow(BaseDialog):
 
         if (not no_buttons) and (has_buttons or view.help):
             bbox = HorizontalLayout()
+            bbox.setSpacing(True)
 
             # Create the necessary special function buttons.
             if nr_buttons == 0:

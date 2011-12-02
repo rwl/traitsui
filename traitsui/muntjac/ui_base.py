@@ -25,6 +25,7 @@ from muntjac.main import muntjac
 from muntjac.api \
     import Window, VerticalLayout, Button, HorizontalLayout, Label
 
+from muntjac.ui.alignment import Alignment
 from muntjac.ui.window import CloseEvent, ICloseListener
 from muntjac.ui.button import ClickEvent
 
@@ -207,7 +208,9 @@ class BasePanel(object):
         id     = action.id
         button = Button( str(name) )
         bbox.addComponent(button)
-#        button.setAutoDefault(False)
+
+        bbox.setComponentAlignment(button, Alignment.MIDDLE_RIGHT)
+
         if default:
             button.focus()
         button.setEnabled(enabled)
@@ -280,6 +283,9 @@ class _StickyDialog(Window):
 
         super(_StickyDialog, self).__init__()
         self.setParent(parent)
+
+#        self.setWidth('600px')
+#        self.setHeight('600px')
 
         self._ui = ui
         self._result = None
@@ -355,6 +361,11 @@ class BaseDialog(BasePanel):
         """Add a panel (either component or None) and optional buttons
         to the dialog."""
 
+        content = self.control.getContent()
+        content.setWidth('-1px')
+        content.setHeight('-1px')
+        content.setSpacing(True)
+
         self._add_menubar()
         self._add_toolbar()
 
@@ -364,6 +375,7 @@ class BaseDialog(BasePanel):
         # Add the optional buttons.
         if buttons is not None:
             self.control.addComponent(buttons)
+            content.setComponentAlignment(buttons, Alignment.BOTTOM_RIGHT)
 
         self._add_statusbar()
 
