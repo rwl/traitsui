@@ -946,9 +946,6 @@ class _GroupPanel(object):
         # FIXME: Decide what to do about the help.
         control.help = item.get_help(ui)
 
-        if desc != '':
-            control.setDecription('Specifies ' + desc)
-
         return control
 
     def _add_emphasis(self, control):
