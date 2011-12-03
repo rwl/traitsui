@@ -78,6 +78,7 @@ class SimpleEditor ( EditorWithList, IValueChangeListener ):
         """
         self.create_control( parent )
         super( SimpleEditor, self ).init( parent )
+        self.set_tooltip()
 
     #---------------------------------------------------------------------------
     #  Creates the initial editor control:
@@ -87,7 +88,7 @@ class SimpleEditor ( EditorWithList, IValueChangeListener ):
         """ Creates the initial editor control.
         """
         self.control = ComboBox()
-        self.control.setMultiSelect(True)
+        self.control.setMultiSelect(False)
         self.control.setNullSelectionAllowed(True)
         self.control.setImmediate(True)
         self.control.addListener(self, IValueChangeListener)
@@ -148,9 +149,14 @@ class SimpleEditor ( EditorWithList, IValueChangeListener ):
     def update_object ( self, text ):
         """ Handles the user selecting a new value from the combo box.
         """
-        value = self.values[self.names.index(unicode(text))]
-        if not isinstance(self.value, basestring):
-            value = [value]
+        if unicode(text) in self.names:
+            value = self.values[self.names.index(unicode(text))]
+            if not isinstance(self.value, basestring):
+                value = [value]
+        elif not isinstance(self.value, basestring):
+            value = []
+        else:
+            value = ''
         self.value = value
 
     #---------------------------------------------------------------------------
@@ -161,7 +167,10 @@ class SimpleEditor ( EditorWithList, IValueChangeListener ):
         """ Updates the editor when the object trait changes externally to the
             editor.
         """
-        self.control.select( parse_value(self.value)[0] )
+        try:
+            self.control.select( parse_value(self.value)[0] )
+        except:
+            pass
 
 #-------------------------------------------------------------------------------
 #  'CustomEditor' class:
@@ -181,6 +190,7 @@ class CustomEditor ( SimpleEditor, IClickListener ):
         """
         self.control = GridLayout()
         self.control.setMargin(False)
+        self.control.setSpacing(True)
 
     #---------------------------------------------------------------------------
     #  Rebuilds the editor after its definition is modified:
@@ -215,17 +225,18 @@ class CustomEditor ( SimpleEditor, IClickListener ):
         for i in range( rows ):
             for j in range( cols ):
                 if n > 0:
-                    cb = CheckBox(labels[index])
+                    cb = CheckBox( str(labels[index]) )
+                    cb.setImmediate(True)
                     cb.value = values[index]
 
-                    if cb.getCaption() in cur_value:
+                    if cb.value in cur_value:
                         cb.setValue(True)
                     else:
                         cb.setValue(False)
 
                     cb.addListener(self, IClickListener)
 
-                    layout.addComponent(cb, i, j)
+                    layout.addComponent(cb, j, i)
 
                     index += incr[j]
                     n -= 1
@@ -244,7 +255,7 @@ class CustomEditor ( SimpleEditor, IClickListener ):
         cur_value = parse_value(self.value)
         if cb.getValue():
             cur_value.append(cb.value)
-        elif cb.getCaption() in cur_value:
+        elif cb.value in cur_value:
             cur_value.remove(cb.value)
 
         if isinstance(self.value, basestring):
@@ -262,7 +273,7 @@ class CustomEditor ( SimpleEditor, IClickListener ):
         """
         new_values = parse_value( self.value )
         for cb in self.control.getComponentIterator():
-            if cb.getCaption() in new_values:
+            if cb.value in new_values:
                 cb.setValue(True)
             else:
                 cb.setValue(False)
@@ -282,15 +293,15 @@ class TextEditor ( BaseTextEditor ):
     def update_object ( self, event=None ):
         """ Handles the user changing the contents of the edit control.
         """
-        try:
-            value = unicode(self.control.getValue())
-            value = eval( value )
-        except:
-            pass
-        try:
-            self.value = value
-        except TraitError:
-            pass
+#        try:
+        value = unicode(self.control.getValue())
+        value = eval( value )
+#        except:
+#            pass
+#        try:
+        self.value = value
+#        except TraitError:
+#            pass
 
 #-------------------------------------------------------------------------------
 #  Parse a value into a list:

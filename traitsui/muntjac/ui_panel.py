@@ -621,6 +621,7 @@ class _GroupPanel(object):
         if show_labels or columns > 1:
             inner = GridLayout(columns * 2, len(content))
             inner.setSpacing(True)
+            inner.setSizeUndefined()
 
             if outer is None:
                 outer = inner
@@ -640,6 +641,7 @@ class _GroupPanel(object):
                     outer = HorizontalLayout()
                 else:
                     outer = VerticalLayout()
+                outer.setSizeUndefined()
 
             inner = outer
 
@@ -697,25 +699,23 @@ class _GroupPanel(object):
                     if show_labels:
                         cols *= 2
 
-#                for i in range(cols):
-#                    line = QtGui.QFrame()
-#
-#                    if self.horizontal == QtGui.QBoxLayout.LeftToRight:
-#                        # Add a vertical separator:
-#                        line.setFrameShape(QtGui.QFrame.VLine)
-#                        if row < 0:
-#                            inner.addWidget(line)
-#                        else:
-#                            inner.addWidget(line, i, row)
-#                    else:
-#                        # Add a horizontal separator:
-#                        line.setFrameShape(QtGui.QFrame.HLine)
-#                        if row < 0:
-#                            inner.addWidget(line)
-#                        else:
-#                            inner.addWidget(line, row, i)
-#
-#                    line.setFrameShadow(QtGui.QFrame.Sunken)
+                for i in range(cols):
+                    if self.horizontal:
+                        # Add a vertical separator:
+                        line = Panel()
+                        line.setWidth('2px')
+                        line.setHeight('-1px')
+                        if row < 0:
+                            inner.addComponent(line)
+                        else:
+                            inner.addComponent(line, row, i)
+                    else:
+                        # Add a horizontal separator:
+                        line = Label('<hr/>', Label.CONTENT_XHTML)
+                        if row < 0:
+                            inner.addComponent(line)
+                        else:
+                            inner.addComponent(line, i, row)
 
                 # Continue on to the next Item in the list:
                 continue
@@ -839,8 +839,8 @@ class _GroupPanel(object):
 
             # Bind the editor into the UIInfo object name space so it can be
             # referred to by a Handler while the user interface is active:
-            id = item.id or name
-            info.bind( id, editor, item.id )
+            Id = item.id or name
+            info.bind( Id, editor, item.id )
 
             # Also, add the editors to the list of editors used to construct
             # the user interface:
@@ -849,7 +849,7 @@ class _GroupPanel(object):
             # If the handler wants to be notified when the editor is created,
             # add it to the list of methods to be called when the UI is
             # complete:
-            defined = getattr( handler, id + '_defined', None )
+            defined = getattr( handler, Id + '_defined', None )
             if defined is not None:
                 ui.add_defined( defined )
 
