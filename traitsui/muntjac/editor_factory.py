@@ -103,7 +103,8 @@ class TextEditor ( Editor, IValueChangeListener ):
         """ Finishes initializing the editor by creating the underlying toolkit
             widget.
         """
-        self.control = TextField(self.str_value)
+        self.control = TextField()
+        self.control.setValue( str(self.str_value) )
         self.control.addListener(self, IValueChangeListener)
         self.set_tooltip()
 
@@ -136,8 +137,8 @@ class ReadonlyEditor ( Editor ):
         """ Finishes initializing the editor by creating the underlying toolkit
             widget.
         """
-        self.control = Label(self.str_value)
-#        self.setReadOnly(True)
+        self.control = Label()
+        self.control.setValue( str(self.str_value) )
 
 #        if self.item.resizable is True or self.item.height != -1.0:
 #            self.control.setSizePolicy(QtGui.QSizePolicy.Expanding,

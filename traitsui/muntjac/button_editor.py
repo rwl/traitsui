@@ -23,11 +23,17 @@
 #  Imports:
 #-------------------------------------------------------------------------------
 
-from muntjac.api import Button, NativeButton, Link, CheckBox, OptionGroup
-from muntjac.ui.button import IClickListener
-from muntjac.data.property import IValueChangeListener
+from muntjac.api \
+    import Button, NativeButton, CheckBox, OptionGroup
 
-from traits.api import Unicode, List, Str, on_trait_change
+from muntjac.ui.button \
+    import IClickListener
+
+from muntjac.data.property \
+    import IValueChangeListener
+
+from traits.api \
+    import Unicode, List, Str, on_trait_change
 
 # FIXME: ToolkitEditorFactory is a proxy class defined here just for backward
 # compatibility. The class has been moved to the

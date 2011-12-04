@@ -27,10 +27,17 @@ Muntjac user interface toolkit.
 import logging
 from string import capitalize
 
-from muntjac.api import GridLayout, CheckBox, ComboBox
-from muntjac.data.property import IValueChangeListener
-from muntjac.data.util.indexed_container import IndexedContainer
-from muntjac.ui.button import IClickListener
+from muntjac.api \
+    import GridLayout, CheckBox, ComboBox
+
+from muntjac.data.property \
+    import IValueChangeListener
+
+from muntjac.data.util.indexed_container \
+    import IndexedContainer
+
+from muntjac.ui.button \
+    import IClickListener
 
 from traits.api \
     import List, Unicode, TraitError

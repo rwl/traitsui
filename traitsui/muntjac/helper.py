@@ -26,11 +26,17 @@
 
 import os.path
 
-from muntjac.api import Button, Window, VerticalLayout, Panel, Application
+from muntjac.api \
+    import Button, Window, VerticalLayout, Panel, Application
 
-from muntjac.ui.component import IComponent
+from muntjac.ui.component \
+    import IComponent
 
-from muntjac.ui.button import IClickListener
+from muntjac.ui.button \
+    import IClickListener
+
+from muntjac.terminal.theme_resource \
+    import ThemeResource
 
 from traits.api \
     import Enum, CTrait, BaseTraitHandler, TraitError
@@ -265,8 +271,10 @@ class SimpleApplication(Application, IClickListener):
 
     def init(self):
         self._mw = mw = Window()
+
 #        ct = Button('Configure traits...', self)
 #        mw.addComponent(ct)
+
         self.setMainWindow(self._mw)
 
         self.configureTraits()
@@ -280,3 +288,29 @@ class SimpleApplication(Application, IClickListener):
             self.getMainWindow().showNotification('Already configuring traits')
         else:
             self.configureTraits()
+
+#-------------------------------------------------------------------------------
+#  Left button
+#-------------------------------------------------------------------------------
+
+class LeftButton(Button):
+
+    def __init__(self, *args):
+        super(LeftButton, self).__init__(*args)
+        size = '16'
+        icon = 'arrow-left.png'
+        res = ThemeResource('../runo/icons/' + size + '/' + icon)
+        self.setIcon(res)
+
+#-------------------------------------------------------------------------------
+#  Right button
+#-------------------------------------------------------------------------------
+
+class RightButton(Button):
+
+    def __init__(self, *args):
+        super(RightButton, self).__init__(*args)
+        size = '16'
+        icon = 'arrow-right.png'
+        res = ThemeResource('../runo/icons/' + size + '/' + icon)
+        self.setIcon(res)

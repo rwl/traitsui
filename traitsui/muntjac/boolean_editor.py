@@ -23,8 +23,11 @@
 #  Imports:
 #-------------------------------------------------------------------------------
 
-from muntjac.api import CheckBox, TextField
-from muntjac.ui.button import IClickListener
+from muntjac.api \
+    import CheckBox, TextField
+
+from muntjac.ui.button \
+    import IClickListener
 
 # FIXME: ToolkitEditorFactory is a proxy class defined here just for backward
 # compatibility. The class has been moved to the

@@ -452,6 +452,7 @@ class _GroupPanel(object):
                 inner = HorizontalLayout()
             else:
                 inner = VerticalLayout()
+            inner.setSizeUndefined()
             inner.addComponent(outer)
 
         elif label != "":
@@ -459,6 +460,7 @@ class _GroupPanel(object):
                 outer = inner = HorizontalLayout()
             else:
                 outer = inner = VerticalLayout()
+            inner.setSizeUndefined()
             inner.addComponent(heading_text(None, text=label).control)
 
         # Add the layout specific content.
@@ -512,6 +514,7 @@ class _GroupPanel(object):
                 # Make sure that outer is a widget or a layout.
                 if outer is None:
                     outer = inner = HorizontalLayout()
+                    outer.setSizeUndefined()
 
                 # Create an editor.
                 self._setup_editor(group, GroupEditor(control=outer))
@@ -692,8 +695,8 @@ class _GroupPanel(object):
                         col = 0
                         row += 1
 
-                    # Skip the row we are about to do.
-                    row += 1
+#                    # Skip the row we are about to do.
+#                    row += 1
 
                     # Allow for the columns.
                     if show_labels:
@@ -711,7 +714,8 @@ class _GroupPanel(object):
                             inner.addComponent(line, row, i)
                     else:
                         # Add a horizontal separator:
-                        line = Label('<hr/>', Label.CONTENT_XHTML)
+                        line = Label('<hr />', Label.CONTENT_XHTML)
+                        line.setWidth('100%')  # FIXME: explicit container size
                         if row < 0:
                             inner.addComponent(line)
                         else:
@@ -728,7 +732,7 @@ class _GroupPanel(object):
             if all_digits.match( name ):
 
                 # If so, add the appropriate amount of space to the layout:
-                spacer = Label()
+                spacer = Label('')
                 if self.horizontal:
                     # Add a horizontal spacer:
                     spacer.setWidth(name + 'px')
@@ -1067,6 +1071,6 @@ def heading_text(*args, **kw):
     global HeadingText
 
     if HeadingText is None:
-        from pyface.api import HeadingText
+        from pyface.ui.muntjac.heading_text import HeadingText
 
     return HeadingText(*args, **kw)
