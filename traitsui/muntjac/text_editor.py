@@ -25,8 +25,11 @@
 
 from muntjac.api import TextField, PasswordField
 
-from muntjac.data.property import IValueChangeListener
-from muntjac.event.field_events import IBlurListener
+from muntjac.data.property \
+    import IValueChangeListener
+
+from muntjac.event.field_events \
+    import IBlurListener
 
 from traits.api \
     import TraitError
@@ -93,6 +96,7 @@ class SimpleEditor ( Editor, IValueChangeListener, IBlurListener ):
 
         control = wtype()
         control.setValue( str(self.str_value) )
+        control.setWidth('100%')
 
         if factory.auto_set and not factory.is_grid_cell:
             control.addListener(self, IValueChangeListener)

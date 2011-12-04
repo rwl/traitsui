@@ -26,6 +26,9 @@
 from traits.api \
     import HasTraits, Instance, Str, Callable
 
+from muntjac.ui.abstract_layout \
+    import AbstractLayout
+
 from traitsui.api \
     import Editor as UIEditor
 
@@ -70,7 +73,7 @@ class Editor ( UIEditor ):
         """ Assigns focus to the editor's underlying toolkit widget.
         """
         if self.control is not None:
-            self.control.setFocus()
+            self.control.focus()
 
     #---------------------------------------------------------------------------
     #  Updates the editor when the object trait changes external to the editor:
@@ -82,7 +85,7 @@ class Editor ( UIEditor ):
         """
         new_value = self.str_value
         if self.control.getValue() != new_value:
-            self.control.setValue( new_value )
+            self.control.setValue( str(new_value) )
 
     #---------------------------------------------------------------------------
     #  Handles an error that occurs while setting the object's trait value:
@@ -92,7 +95,7 @@ class Editor ( UIEditor ):
         """ Handles an error that occurs while setting the object's trait value.
         """
         self.control.getWindow().showNotification(
-                self.description + ' value error', str(excp))
+                str(self.description) + ' value error', str(excp))
 
     #---------------------------------------------------------------------------
     #  Sets the tooltip for a specified control:
@@ -130,13 +133,11 @@ class Editor ( UIEditor ):
         """A helper that allows the control to be a layout and recursively
            manages all its widgets.
         """
-        if isinstance(control, QtGui.QWidget):
-            control.setEnabled(enabled)
+        if isinstance(control, AbstractLayout):
+            for itm in control.getComponentIterator():
+                self._enabled_changed_helper(itm, enabled)
         else:
-            for i in range(control.count()):
-                itm = control.itemAt(i)
-                self._enabled_changed_helper((itm.widget() or itm.layout()),
-                        enabled)
+            control.setEnabled(enabled)
 
     #---------------------------------------------------------------------------
     #  Handles the 'visible' state of the editor being changed:
@@ -174,13 +175,11 @@ class Editor ( UIEditor ):
         """A helper that allows the control to be a layout and recursively
            manages all its widgets.
         """
-        if isinstance(control, QtGui.QWidget):
-            control.setVisible(visible)
+        if isinstance(control, AbstractLayout):
+            for itm in control.getComponentIterator():
+                self._visible_changed_helper(itm, visible)
         else:
-            for i in range(control.count()):
-                itm = control.itemAt(i)
-                self._visible_changed_helper((itm.widget() or itm.layout()),
-                        visible)
+            control.setVisible(visible)
 
     #---------------------------------------------------------------------------
     #  Returns the editor's control for indicating error status:
