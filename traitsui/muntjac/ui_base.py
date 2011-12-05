@@ -394,7 +394,7 @@ class BaseDialog(BasePanel):
 
         ui.owner.init(ui, parent, style)
         ui.control = ui.owner.control
-        ui.control._parent = parent
+        ui.control.parent = parent
 
         try:
             ui.prepare_ui()

@@ -56,7 +56,7 @@ set_ui_handler( ui_handler )
 #------------------------------------------------------------------------------
 
 class GUIToolkit ( Toolkit ):
-    """ Implementation class for PyQt toolkit.
+    """ Implementation class for Muntjac toolkit.
     """
     #--------------------------------------------------------------------------
     #  Create PyQt specific user interfaces using information from the
@@ -64,49 +64,49 @@ class GUIToolkit ( Toolkit ):
     #--------------------------------------------------------------------------
 
     def ui_panel ( self, ui, parent ):
-        """ Creates a PyQt panel-based user interface using information
+        """ Creates a Muntjac panel-based user interface using information
             from the specified UI object.
         """
         import ui_panel
         ui_panel.ui_panel( ui, parent )
 
     def ui_subpanel ( self, ui, parent ):
-        """ Creates a PyQt subpanel-based user interface using information
+        """ Creates a Muntjac subpanel-based user interface using information
             from the specified UI object.
         """
         import ui_panel
         ui_panel.ui_subpanel( ui, parent )
 
     def ui_livemodal ( self, ui, parent ):
-        """ Creates a PyQt modal "live update" dialog user interface using
+        """ Creates a Muntjac modal "live update" dialog user interface using
             information from the specified UI object.
         """
         import ui_live
         ui_live.ui_livemodal( ui, parent )
 
     def ui_live ( self, ui, parent ):
-        """ Creates a PyQt non-modal "live update" window user interface
+        """ Creates a Muntjac non-modal "live update" window user interface
             using information from the specified UI object.
         """
         import ui_live
         ui_live.ui_live( ui, parent )
 
     def ui_modal ( self, ui, parent ):
-        """ Creates a PyQt modal dialog user interface using information
+        """ Creates a Muntjac modal dialog user interface using information
             from the specified UI object.
         """
         import ui_modal
         ui_modal.ui_modal( ui, parent )
 
     def ui_nonmodal ( self, ui, parent ):
-        """ Creates a PyQt non-modal dialog user interface using
+        """ Creates a Muntjac non-modal dialog user interface using
             information from the specified UI object.
         """
         import ui_modal
         ui_modal.ui_nonmodal( ui, parent )
 
     def ui_wizard ( self, ui, parent ):
-        """ Creates a PyQt wizard dialog user interface using information
+        """ Creates a Muntjac wizard dialog user interface using information
             from the specified UI object.
         """
         import ui_wizard
@@ -114,7 +114,7 @@ class GUIToolkit ( Toolkit ):
 
     def view_application ( self, context, view, kind = None, handler = None,
                                      id = '', scrollable = None, args = None ):
-        """ Creates a PyQt modal dialog user interface that
+        """ Creates a Muntjac modal dialog user interface that
             runs as a complete application, using information from the
             specified View object.
 

@@ -98,7 +98,7 @@ def _ui_panel_for(ui, parent, is_subpanel):
     """
     ui.control = control = _Panel(ui, parent, is_subpanel).control
 
-    control._parent = parent
+    control.parent = parent
     control._object = ui.context.get('object')
     control._ui = ui
 
